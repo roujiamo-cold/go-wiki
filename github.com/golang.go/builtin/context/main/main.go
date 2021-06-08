@@ -10,8 +10,8 @@ import (
 var ctx context.Context
 
 func main() {
-	//myctx.CancelCtxTest()
-	myctx.TimeoutCtxTest()
+	myctx.CancelCtxTest()
+	//myctx.TimeoutCtxTest()
 }
 
 // userTest 1

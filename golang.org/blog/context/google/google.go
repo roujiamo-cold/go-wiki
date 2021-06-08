@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/pkg/errors"
+
 	"github.com/roujiamo-cold/go-wiki/golang.org/blog/context/userip"
 )
 
@@ -20,7 +22,8 @@ type Result struct {
 // Search sends query to Google search and returns the results.
 func Search(ctx context.Context, query string) (Results, error) {
 	// Prepare the Google Search API request.
-	req, err := http.NewRequest("GET", "https://ajax.googleapis.com/ajax/services/search/web?v=1.0", nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", "https://ajax.googleapis.com/ajax/services/search/web?v=1.0", nil)
+	//req, err := http.NewRequest("GET", "https://ajax.googleapis.com/ajax/services/search/web?v=1.0", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +43,7 @@ func Search(ctx context.Context, query string) (Results, error) {
 	var results Results
 	err = httpDo(ctx, req, func(resp *http.Response, err error) error {
 		if err != nil {
-			return err
+			return errors.Wrap(err, "http do error")
 		}
 		defer resp.Body.Close()
 
@@ -55,7 +58,7 @@ func Search(ctx context.Context, query string) (Results, error) {
 			}
 		}
 		if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-			return err
+			return errors.Wrap(err, "http response decode error")
 		}
 		for _, res := range data.ResponseData.Results {
 			results = append(results, Result{Title: res.TitleNoFormatting, URL: res.URL})
@@ -73,13 +76,12 @@ func Search(ctx context.Context, query string) (Results, error) {
 func httpDo(ctx context.Context, req *http.Request, f func(*http.Response, error) error) error {
 	// Run the HTTP request in a goroutine and pass the response to f.
 	c := make(chan error, 1)
-	req = req.WithContext(ctx)
+	//req = req.WithContext(ctx)
 	go func() { c <- f(http.DefaultClient.Do(req)) }()
 	select {
 	case <-ctx.Done():
 		err := <-c // Wait for f to return.
-		log.Printf("httpDo, <-ctx.Done(), f err = %v", err)
-		log.Printf("httpDo, <-ctx.Done(), err = %v", ctx.Err())
+		log.Printf("httpDo, <-ctx.Done(), f err = %v, ctx.Err() = %v", err, ctx.Err())
 		return ctx.Err()
 	case err := <-c:
 		log.Printf("httpDo, err := <-c, err = %v", err)

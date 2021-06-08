@@ -3,11 +3,14 @@ package context
 import (
 	"context"
 	"fmt"
+	"log"
 	"math/rand"
 	"time"
 
 	"github.com/pkg/errors"
 )
+
+var timeTemplate = "2006-01-02 15:04:05"
 
 func generator() (int, error) {
 	time.Sleep(500 * time.Millisecond)
@@ -29,6 +32,8 @@ func timeoutStream(ctx context.Context, out chan<- int) error {
 		case <-ctx.Done():
 			return errors.Wrap(ctx.Err(), "timeoutStream: ctx.Done()")
 		case out <- i:
+			deadline, ok := ctx.Deadline()
+			log.Printf("ctx deadline %v, %v", deadline.Format(timeTemplate), ok)
 		}
 	}
 }
@@ -38,7 +43,7 @@ func init() {
 }
 
 func TimeoutCtxTest() {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
 	ch := make(chan int)

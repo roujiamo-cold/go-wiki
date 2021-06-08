@@ -3,6 +3,7 @@ package context
 import (
 	"context"
 	"fmt"
+	"log"
 	"math/rand"
 	"time"
 
@@ -32,6 +33,8 @@ func cancelStream(ctx context.Context, out chan<- Value) error {
 		case <-ctx.Done():
 			return ctx.Err()
 		case out <- v:
+			deadline, ok := ctx.Deadline()
+			log.Printf("ctx deadline %v, %v", deadline.Format(timeTemplate), ok)
 		}
 	}
 }
