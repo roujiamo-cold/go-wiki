@@ -1,5 +1,5 @@
 // Package user defines a User type that's stored in Contexts.
-package user
+package context
 
 import (
 	"context"
