@@ -6,4 +6,5 @@ require (
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/justinas/alice v1.2.0
 	github.com/pkg/errors v0.9.1
+	google.golang.org/appengine v1.6.7
 )
